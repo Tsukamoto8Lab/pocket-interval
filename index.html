@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ポケットインターバル</title>
+  <meta name="description" content="スマホをポケットに入れたまま、振動で走る／歩くの切り替えがわかるインターバルタイマー">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- 数字用（数字とコロンだけを読み込む） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&text=0123456789:/&display=swap">
+  <!-- 見出し用（使う文字だけを読み込む） -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&text=%E3%81%86%E3%81%8F%E3%81%A7%E3%82%82%E3%82%8B%E3%82%A2%E3%82%A4%E3%82%A6%E3%82%A9%E3%82%B1%E3%82%B9%E3%82%BF%E3%83%83%E3%83%88%E3%83%90%E3%83%97%E3%83%9D%E3%83%A0%E3%83%AB%E3%83%B3%E3%83%BC%E4%B8%80%E4%B8%AD%E4%BA%86%E5%81%9C%E5%82%99%E5%AE%8C%E5%BA%A6%E6%99%82%E6%AD%A2%E6%AD%A9%E6%BA%96%E7%B5%82%E8%B5%B0%E9%80%94&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ───────── 設定画面 ───────── -->
+<main id="screen-setup" class="screen setup">
+  <header class="setup-head">
+    <h1 class="brand">ポケットインターバル</h1>
+    <p class="lede">画面を見なくても、振動で走る／歩くの切り替えがわかります。</p>
+  </header>
+
+  <div id="warnings" class="warnings"></div>
+
+  <section class="block" aria-labelledby="h-menu">
+    <h2 id="h-menu" class="block-title">メニュー</h2>
+
+    <div class="field" data-key="run">
+      <div class="field-head">
+        <label for="f-run" class="field-name"><span class="mark mark-run" aria-hidden="true"></span>走る</label>
+        <span class="field-hint" data-hint="run"></span>
+      </div>
+      <div class="stepper">
+        <button type="button" class="step" data-dir="-1" aria-label="走る時間を減らす">−</button>
+        <div class="value"><input id="f-run" type="number" inputmode="numeric" min="5" max="3600" step="5"><span class="unit">秒</span></div>
+        <button type="button" class="step" data-dir="1" aria-label="走る時間を増やす">＋</button>
+      </div>
+    </div>
+
+    <div class="field" data-key="walk">
+      <div class="field-head">
+        <label for="f-walk" class="field-name"><span class="mark mark-walk" aria-hidden="true"></span>歩く</label>
+        <span class="field-hint" data-hint="walk"></span>
+      </div>
+      <div class="stepper">
+        <button type="button" class="step" data-dir="-1" aria-label="歩く時間を減らす">−</button>
+        <div class="value"><input id="f-walk" type="number" inputmode="numeric" min="5" max="3600" step="5"><span class="unit">秒</span></div>
+        <button type="button" class="step" data-dir="1" aria-label="歩く時間を増やす">＋</button>
+      </div>
+    </div>
+
+    <div class="field" data-key="reps">
+      <div class="field-head">
+        <label for="f-reps" class="field-name"><span class="mark mark-reps" aria-hidden="true"></span>くり返し</label>
+        <span class="field-hint">走る＋歩くで1回</span>
+      </div>
+      <div class="stepper">
+        <button type="button" class="step" data-dir="-1" aria-label="回数を減らす">−</button>
+        <div class="value"><input id="f-reps" type="number" inputmode="numeric" min="1" max="99" step="1"><span class="unit">回</span></div>
+        <button type="button" class="step" data-dir="1" aria-label="回数を増やす">＋</button>
+      </div>
+    </div>
+
+    <div class="field" data-key="warmup">
+      <div class="field-head">
+        <label for="f-warmup" class="field-name"><span class="mark mark-warmup" aria-hidden="true"></span>ウォームアップ</label>
+        <span class="field-hint" data-hint="warmup"></span>
+      </div>
+      <div class="stepper">
+        <button type="button" class="step" data-dir="-1" aria-label="ウォームアップを減らす">−</button>
+        <div class="value"><input id="f-warmup" type="number" inputmode="numeric" min="0" max="3600" step="30"><span class="unit">秒</span></div>
+        <button type="button" class="step" data-dir="1" aria-label="ウォームアップを増やす">＋</button>
+      </div>
+    </div>
+
+    <figure class="plan">
+      <div class="strip" id="plan-strip" aria-hidden="true"></div>
+      <figcaption class="plan-caption" id="plan-caption"></figcaption>
+    </figure>
+  </section>
+
+  <section class="block" aria-labelledby="h-notify">
+    <h2 id="h-notify" class="block-title">知らせ方</h2>
+
+    <label class="toggle">
+      <span class="toggle-text"><span class="toggle-name">バイブ</span><span class="toggle-desc" id="vibe-desc">切り替えを振動で知らせます</span></span>
+      <input type="checkbox" role="switch" id="t-vibe">
+    </label>
+    <label class="toggle">
+      <span class="toggle-text"><span class="toggle-name">ビープ音</span><span class="toggle-desc">振動と同じリズムで鳴らします</span></span>
+      <input type="checkbox" role="switch" id="t-beep">
+    </label>
+    <label class="toggle">
+      <span class="toggle-text"><span class="toggle-name">音声</span><span class="toggle-desc">「走って」「歩いて」と読み上げます</span></span>
+      <input type="checkbox" role="switch" id="t-voice">
+    </label>
+  </section>
+
+  <section class="block" aria-labelledby="h-patterns">
+    <h2 id="h-patterns" class="block-title">振動パターン</h2>
+    <p class="block-note">タップすると実際に振動します。スタート前に確かめてください。</p>
+    <ul class="patterns">
+      <li><button type="button" class="pattern" data-test="run">
+        <span class="pattern-name">走る</span>
+        <span class="pattern-bars" data-bars="run" aria-hidden="true"></span>
+        <span class="pattern-desc">長く1回</span>
+      </button></li>
+      <li><button type="button" class="pattern" data-test="walk">
+        <span class="pattern-name">歩く</span>
+        <span class="pattern-bars" data-bars="walk" aria-hidden="true"></span>
+        <span class="pattern-desc">短く2回</span>
+      </button></li>
+      <li><button type="button" class="pattern" data-test="finish">
+        <span class="pattern-name">終了</span>
+        <span class="pattern-bars" data-bars="finish" aria-hidden="true"></span>
+        <span class="pattern-desc">長く3回</span>
+      </button></li>
+      <li><button type="button" class="pattern" data-test="countdown">
+        <span class="pattern-name">3秒前</span>
+        <span class="pattern-bars" data-bars="countdown" aria-hidden="true"></span>
+        <span class="pattern-desc">毎秒ちょんと</span>
+      </button></li>
+    </ul>
+    <p class="test-status" id="test-status" role="status"></p>
+  </section>
+
+  <section class="block" aria-labelledby="h-screen">
+    <h2 id="h-screen" class="block-title">画面</h2>
+    <label class="toggle">
+      <span class="toggle-text"><span class="toggle-name">誤タッチ防止</span><span class="toggle-desc">一時停止と終了を長押しにして、ポケットの中での誤操作を防ぎます</span></span>
+      <input type="checkbox" role="switch" id="t-guard">
+    </label>
+    <label class="toggle">
+      <span class="toggle-text"><span class="toggle-name">暗い表示</span><span class="toggle-desc">実行中の画面を黒地にして電池を節約します</span></span>
+      <input type="checkbox" role="switch" id="t-dim">
+    </label>
+  </section>
+
+  <section class="block notes" aria-labelledby="h-notes">
+    <h2 id="h-notes" class="block-title">使うときは</h2>
+    <ul class="note-list">
+      <li>スタート後の5秒は準備時間です。その間にポケットへ入れてください。</li>
+      <li>画面はつけたままにします。電源ボタンで画面を消すと、Android の仕様で振動が届かなくなります。</li>
+      <li>振動しないときは、端末の設定でバイブレーションが有効か、バッテリーセーバーやおやすみモードがオフかを確認してください。</li>
+    </ul>
+  </section>
+
+  <div class="start-bar">
+    <button type="button" class="start" id="btn-start">
+      <span class="start-label">スタート</span>
+      <span class="start-sub" id="start-sub"></span>
+    </button>
+  </div>
+</main>
+
+<!-- ───────── 実行画面 ───────── -->
+<section id="screen-run" class="screen run" data-phase="ready" hidden aria-label="実行中">
+  <div class="run-fill" aria-hidden="true"></div>
+  <div class="run-body">
+    <header class="run-top">
+      <p class="run-rep" aria-label="回数"><span class="num" id="rep-now">0</span><span class="rep-of">/</span><span class="num" id="rep-total">10</span><span class="rep-unit">回目</span></p>
+      <p class="run-left">全体の残り <span class="num" id="left-total">20:00</span></p>
+    </header>
+    <div class="rep-cells" id="rep-cells" aria-hidden="true"></div>
+
+    <h2 class="phase" id="phase-label" aria-live="polite"><span class="phase-emoji" id="phase-emoji"></span><span id="phase-text">準備</span></h2>
+    <p class="digits" id="digits" aria-hidden="true">5</p>
+    <p class="next" id="next"></p>
+
+    <div class="controls">
+      <button type="button" class="ctl" id="btn-pause"><span class="ctl-label">一時停止</span><span class="ctl-hint">長押し</span></button>
+      <button type="button" class="ctl ctl-primary" id="btn-resume" hidden><span class="ctl-label">再開</span></button>
+      <button type="button" class="ctl" id="btn-stop"><span class="ctl-label">終了</span><span class="ctl-hint">長押し</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── 終了画面 ───────── -->
+<section id="screen-done" class="screen done" hidden aria-labelledby="done-title">
+  <div class="done-body">
+    <h2 class="done-title" id="done-title">完了</h2>
+    <p class="done-sub" id="done-sub">おつかれさまでした。</p>
+
+    <p class="done-total"><span class="num" id="done-total">20:00</span></p>
+    <p class="done-total-label">運動した時間（一時停止は除く）</p>
+
+    <div class="strip done-strip" id="done-strip" aria-hidden="true"></div>
+
+    <dl class="done-stats" id="done-stats"></dl>
+
+    <div class="done-actions">
+      <button type="button" class="start" id="btn-again"><span class="start-label">もう一度</span></button>
+      <button type="button" class="secondary" id="btn-back">設定に戻る</button>
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>

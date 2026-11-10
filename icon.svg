@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 上：走る（オレンジに長い振動1回）／下：歩く（青に短い振動2回） -->
+  <rect width="64" height="64" fill="#1546e0"/>
+  <rect width="64" height="32" fill="#ff6b00"/>
+  <rect x="18" y="19" width="28" height="6" fill="#000"/>
+  <rect x="18" y="39" width="11" height="6" fill="#fff"/>
+  <rect x="35" y="39" width="11" height="6" fill="#fff"/>
+</svg>
