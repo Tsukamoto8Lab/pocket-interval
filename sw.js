@@ -20,8 +20,13 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
+  // 消すのは自分の古いキャッシュ（pocket-interval-〜）だけ。
+  // GitHub Pages では同じアカウントの別サイトとキャッシュ置き場を共有するため、
+  // ほかのサイトのキャッシュには触らない。
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    caches.keys().then(keys => Promise.all(
+      keys.filter(k => k.startsWith('pocket-interval-') && k !== CACHE).map(k => caches.delete(k))
+    ))
   );
   self.clients.claim();
 });
